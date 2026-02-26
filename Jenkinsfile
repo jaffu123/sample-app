@@ -32,18 +32,16 @@ pipeline {
         }
 
         stage('Deploy to Docker Server') {
-            steps {
-                sshagent(['ubuntu']) {
-                    sh '''
-ssh -o StrictHostKeyChecking=no ubuntu@43.205.120.214 "
-docker pull jaffu23/myapp &&
-docker stop myapp || true &&
-docker rm myapp || true &&
-docker run -d -p 8080:80 --name myapp jaffu23/myapp
-"
-'''
-                }
-            }
+    steps {
+        sshagent(['docker-server-ssh']) {
+            sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@43.205.120.214 "
+            docker pull jaffu23/myapp &&
+            docker stop myapp || true &&
+            docker rm myapp || true &&
+            docker run -d -p 8080:80 --name myapp jaffu23/myapp
+            "
+            '''
         }
     }
 }

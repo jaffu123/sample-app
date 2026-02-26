@@ -2,21 +2,21 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "jaffu23/myapp"
+        DOCKER_IMAGE = "jaffu23/myapp"
     }
 
     stages {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
         stage('Login to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
+                    credentialsId: 'dockerhub-credentials',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
@@ -27,21 +27,23 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                sh 'docker push $IMAGE_NAME'
+                sh 'docker push $DOCKER_IMAGE'
             }
         }
 
         stage('Deploy to Docker Server') {
-    steps {
-        sshagent(['ubuntu']) {
-            sh '''
-                ssh -o StrictHostKeyChecking=no ubuntu@172.31.33.171 "
-                docker pull jaffu23/myapp &&
-                docker stop myapp || true &&
-                docker rm myapp || true &&
-                docker run -d -p 8080:80 --name myapp jaffu23/myapp
-                "
-            '''
+            steps {
+                sshagent(['ubuntu']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@172.31.33.171 "
+                        docker pull jaffu23/myapp &&
+                        docker stop myapp || true &&
+                        docker rm myapp || true &&
+                        docker run -d -p 8080:80 --name myapp jaffu23/myapp
+                        "
+                    '''
+                }
+            }
         }
     }
 }
